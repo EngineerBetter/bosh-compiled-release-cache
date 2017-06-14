@@ -191,7 +191,7 @@ func (client *Client) deleteDeployment(deploymentName string) error {
 
 const manifestTemplate = `
 ---
-name: <% .DeploymentName %>
+name: compilation-<% .DeploymentName %>
 
 releases:
 - name: <% .ReleaseName %>
