@@ -2,7 +2,6 @@ package bosh
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -30,7 +29,7 @@ func New(username, password, ip, caCert string) Client {
 	}
 }
 
-func (client *Client) Compile(release *CompiledRelease) (io.ReadCloser, error) {
+func (client *Client) Compile(release *CompiledRelease) (*os.File, error) {
 	manifestBytes, err := GenerateManifest(release)
 	if err != nil {
 		return nil, err

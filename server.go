@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -63,11 +64,8 @@ func releaseHandler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasPrefix(err.Error(), s3.AWSErrCodeNoSuchKey) {
 		// compile release
-		log.Println("goto bosh io")
-		go func() {
-			// _ = bosh.New(os.Getenv("BOSH_USER"), os.Getenv("BOSH_PASSWORD"), os.Getenv("BOSH_HOST"), os.Getenv("BOSH_CA_CERT"))
-			// output := client.Compile(release)
-		}()
+		go compile(&release)
+
 		err := streamFromBoshIO(w, release)
 		if err != nil {
 			panic(err)
@@ -84,6 +82,19 @@ func releaseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	return
+}
+
+func compile(release *bosh.CompiledRelease) {
+	log.Printf("Compiling release: %s\n", release.ReleaseName)
+	client := bosh.New(os.Getenv("BOSH_USER"), os.Getenv("BOSH_PASSWORD"), os.Getenv("BOSH_HOST"), os.Getenv("BOSH_CA_CERT"))
+	output, err := client.Compile(release)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := s3.PutFile(s3Bucket, release.ToS3Path(), s3Region, output); err != nil {
+		panic(err)
+	}
 }
 
 func ReleaseFromRequestVars(requestVars map[string]string) bosh.CompiledRelease {
