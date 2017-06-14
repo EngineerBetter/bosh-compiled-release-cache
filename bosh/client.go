@@ -3,6 +3,7 @@ package bosh
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,6 +54,8 @@ func (client *Client) Compile(release *CompiledRelease) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Printf("Exporting release to %s\n", dir)
 
 	if err := client.exportRelease(release, dir); err != nil {
 		return nil, err
