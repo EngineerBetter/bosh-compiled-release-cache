@@ -1,8 +1,6 @@
 package s3
 
 import (
-	"errors"
-	"fmt"
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -52,10 +50,10 @@ func HasFile(bucket, path, region string) (bool, error) {
 }
 
 // GetFile returns a file on S3
-func GetFile(bucket, path, region string) (io.ReadCloser, string, error) {
+func GetFile(bucket, path, region string) (io.ReadCloser, error) {
 	sess, err := session.NewSession(aws.NewConfig().WithCredentialsChainVerboseErrors(true))
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	client := s3.New(sess, &aws.Config{Region: &region})
 	response, err := client.GetObject(&s3.GetObjectInput{
@@ -64,16 +62,10 @@ func GetFile(bucket, path, region string) (io.ReadCloser, string, error) {
 	})
 
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	status := response.Metadata["Status"]
-	fmt.Printf("%#v\n", response.Metadata)
-	if status == nil {
-		return nil, "", errors.New("Metadata not set: Status")
-	}
-
-	return response.Body, *status, nil
+	return response.Body, nil
 }
 
 // PutFile writes a file to S3
