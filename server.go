@@ -12,6 +12,7 @@ import (
 	"github.com/engineerbetter/compiled-release-server/bosh"
 	"github.com/engineerbetter/compiled-release-server/s3"
 	"github.com/gorilla/mux"
+	uuid "github.com/satori/go.uuid"
 )
 
 const s3Bucket = "summit-hackathon-compiled-releases"
@@ -38,21 +39,33 @@ func main() {
 
 	log.Fatal(srv.ListenAndServe())
 }
+
 func streamFromBoshIO(w http.ResponseWriter, r bosh.CompiledRelease) error {
+	log.Printf("Streaming response from %s\n", r.BoshURL())
 	boshResp, err := http.Get(r.BoshURL())
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(w, boshResp.Body)
+
+	if boshResp.StatusCode != http.StatusOK {
+		return fmt.Errorf("expected status code 200 from %s, recieved %d\n", r.BoshURL(), boshResp.StatusCode)
+	}
+
+	byteCount, err := io.Copy(w, boshResp.Body)
 	if err != nil {
 		return err
 	}
+
+	log.Printf("Copied %d bytes\n", byteCount)
+
 	return nil
 }
 func releaseHandler(w http.ResponseWriter, r *http.Request) {
 	release := ReleaseFromRequestVars(mux.Vars(r))
+	log.Printf("fetching release %#v\n", release)
+
 	path := release.ToS3Path()
-	log.Println("Writing headers")
+	log.Println("writing headers")
 
 	w.Header().Set("Content-Type", "application/gzip")
 	w.Header().Set(
@@ -60,46 +73,59 @@ func releaseHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("timeout=%d, max=%d", requestTimeoutSeconds, 100),
 	)
 
-	fileReader, _, err := s3.GetFile(s3Bucket, path, s3Region)
+	fileReader, err := s3.GetFile(s3Bucket, path, s3Region)
 
 	if strings.HasPrefix(err.Error(), s3.AWSErrCodeNoSuchKey) {
-		// compile release
-		go compile(&release)
+		go compile(release)
 
-		err := streamFromBoshIO(w, release)
-		if err != nil {
-			panic(err)
+		if err := streamFromBoshIO(w, release); err != nil {
+			log.Fatal(err)
 		}
-	} else if err != nil {
-		panic(err)
-	} else {
-		log.Println("goto s3")
-		// found in bucket
-		_, err = io.Copy(w, fileReader)
-		if err != nil {
-			panic(err)
-		}
+
+		return
 	}
 
-	return
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	log.Printf("found release %s in S3\n", release.ReleaseName)
+
+	bytesCount, err := io.Copy(w, fileReader)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	log.Printf("copied %d bytes from S3\n", bytesCount)
 }
 
-func compile(release *bosh.CompiledRelease) {
+func compile(release bosh.CompiledRelease) {
 	log.Printf("Compiling release: %s\n", release.ReleaseName)
-	client := bosh.New(os.Getenv("BOSH_USER"), os.Getenv("BOSH_PASSWORD"), os.Getenv("BOSH_HOST"), os.Getenv("BOSH_CA_CERT"))
-	output, err := client.Compile(release)
+
+	client := bosh.New(os.Getenv("BOSH_CLIENT"), os.Getenv("BOSH_CLIENT_SECRET"), os.Getenv("BOSH_HOST"), os.Getenv("BOSH_CA_CERT"))
+	output, err := client.Compile(&release)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 
 	if err := s3.PutFile(s3Bucket, release.ToS3Path(), s3Region, output); err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 }
 
 func ReleaseFromRequestVars(requestVars map[string]string) bosh.CompiledRelease {
+	releasePathParts := strings.Split(requestVars["release"], "/")
+	releaseName := releasePathParts[len(releasePathParts)-1]
+	releaseName = strings.TrimSuffix(releaseName, "-release")
+
 	return bosh.CompiledRelease{
-		ReleaseName:     requestVars["release"],
+		DeploymentName:  uuid.NewV4().String(),
+		ReleasePath:     requestVars["release"],
+		ReleaseName:     releaseName,
 		ReleaseVersion:  requestVars["release_v"],
 		StemcellName:    requestVars["stemcell"],
 		StemcellVersion: requestVars["stemcell_v"],
