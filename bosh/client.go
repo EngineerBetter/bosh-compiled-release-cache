@@ -132,7 +132,7 @@ func (client *Client) exportRelease(release *CompiledRelease, dir string) error 
 		"--dir",
 		dir,
 		fmt.Sprintf("%s/%s", release.ReleaseName, release.ReleaseVersion),
-		fmt.Sprintf("%s/%s", release.StemcellName, release.StemcellVersion),
+		fmt.Sprintf("%s/%s", release.StemcellOS(), release.StemcellVersion),
 	)
 
 	cmd.Stderr = os.Stderr
@@ -200,7 +200,7 @@ releases:
 
 stemcells:
 - alias: default
-  os: <% .StemcellName %>
+  os: <% .StemcellOS %>
   version: "<% .StemcellVersion %>"
 
 jobs: []

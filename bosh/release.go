@@ -23,6 +23,14 @@ func (compiledRelease *CompiledRelease) ToS3Path() string {
 	)
 }
 
+func (compiledRelease *CompiledRelease) StemcellOS() string {
+	if strings.Contains(compiledRelease.StemcellName, "ubuntu-trusty") {
+		return "ubuntu-trusty"
+	}
+
+	panic(fmt.Errorf("Stemcell not supported: %s", compiledRelease.StemcellName))
+}
+
 func (compiledRelease *CompiledRelease) StemcellURL() string {
 	// https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v=3421.6
 	return fmt.Sprintf("https://bosh.io/d/stemcells/%s?v=%s", compiledRelease.StemcellName, compiledRelease.StemcellVersion)
