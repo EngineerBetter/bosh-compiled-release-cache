@@ -116,7 +116,7 @@ func compile(release bosh.CompiledRelease) {
 		return
 	}
 
-	log.Println("successfully uploaded %s to S3\n", release.ToS3Path())
+	log.Printf("successfully uploaded %s to S3\n", release.ToS3Path())
 }
 
 func ReleaseFromRequestVars(requestVars map[string]string) bosh.CompiledRelease {
