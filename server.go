@@ -102,7 +102,7 @@ func releaseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func compile(release bosh.CompiledRelease) {
-	log.Printf("Compiling release: %s\n", release.ReleaseName)
+	log.Printf("compiling release: %s\n", release.ReleaseName)
 
 	client := bosh.New(os.Getenv("BOSH_CLIENT"), os.Getenv("BOSH_CLIENT_SECRET"), os.Getenv("BOSH_HOST"), os.Getenv("BOSH_CA_CERT"))
 	output, err := client.Compile(&release)
@@ -111,6 +111,7 @@ func compile(release bosh.CompiledRelease) {
 		return
 	}
 
+	log.Printf("uploading release to s3: %s\n", release.ToS3Path())
 	if err := s3.PutFile(s3Bucket, release.ToS3Path(), s3Region, output); err != nil {
 		log.Fatal(err)
 		return
