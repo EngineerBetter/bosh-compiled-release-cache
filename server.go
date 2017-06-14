@@ -123,7 +123,7 @@ func ReleaseFromRequestVars(requestVars map[string]string) bosh.CompiledRelease 
 	releaseName = strings.TrimSuffix(releaseName, "-release")
 
 	return bosh.CompiledRelease{
-		DeploymentName:  uuid.NewV4().String(),
+		DeploymentName:  fmt.Sprintf("compilation-%s", uuid.NewV4().String()),
 		ReleasePath:     requestVars["release"],
 		ReleaseName:     releaseName,
 		ReleaseVersion:  requestVars["release_v"],
