@@ -84,7 +84,7 @@ func (client *Client) Compile(release *CompiledRelease) (*os.File, error) {
 
 func (client *Client) exportRelease(release *CompiledRelease, dir string) error {
 	cmd := exec.Command(
-		"bosh-cli",
+		"./bosh-cli",
 		"--non-interactive",
 		"--environment",
 		client.ip,
@@ -111,7 +111,7 @@ func (client *Client) exportRelease(release *CompiledRelease, dir string) error 
 
 func (client *Client) deploy(deploymentName, manifestPath string) error {
 	cmd := exec.Command(
-		"bosh-cli",
+		"./bosh-cli",
 		"--non-interactive",
 		"--environment",
 		client.ip,
@@ -136,7 +136,7 @@ func (client *Client) deploy(deploymentName, manifestPath string) error {
 func (client *Client) deleteDeployment(deploymentName string) error {
 
 	cmd := exec.Command(
-		"bosh-cli",
+		"./bosh-cli",
 		"--non-interactive",
 		"--environment",
 		client.ip,
