@@ -75,7 +75,7 @@ func releaseHandler(w http.ResponseWriter, r *http.Request) {
 
 	fileReader, err := s3.GetFile(s3Bucket, path, s3Region)
 
-	if strings.HasPrefix(err.Error(), s3.AWSErrCodeNoSuchKey) {
+	if err != nil && strings.HasPrefix(err.Error(), s3.AWSErrCodeNoSuchKey) {
 		go compile(release)
 
 		if err := streamFromBoshIO(w, release); err != nil {
