@@ -131,7 +131,7 @@ func (client *Client) exportRelease(release *CompiledRelease, dir string) error 
 		"export-release",
 		"--dir",
 		dir,
-		fmt.Sprintf("%s/%s", release.ReleaseName, release.ReleaseVersion),
+		fmt.Sprintf("%s/%s", release.ReleaseName(), release.ReleaseVersion),
 		fmt.Sprintf("%s/%s", release.StemcellOS(), release.StemcellVersion),
 	)
 

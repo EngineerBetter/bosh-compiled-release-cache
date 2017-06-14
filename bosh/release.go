@@ -7,7 +7,6 @@ import (
 
 type CompiledRelease struct {
 	DeploymentName  string
-	ReleaseName     string
 	ReleasePath     string
 	ReleaseVersion  string
 	StemcellName    string
@@ -21,6 +20,14 @@ func (compiledRelease *CompiledRelease) ToS3Path() string {
 		sanitizeS3Path(compiledRelease.StemcellName),
 		sanitizeS3Path(compiledRelease.StemcellVersion),
 	)
+}
+
+func (compiledRelease *CompiledRelease) ReleaseName() string {
+	releasePathParts := strings.Split(compiledRelease.ReleasePath, "/")
+	releaseName := releasePathParts[len(releasePathParts)-1]
+	releaseName = strings.TrimSuffix(releaseName, "-release")
+	releaseName = strings.TrimSuffix(releaseName, "-boshrelease")
+	return releaseName
 }
 
 func (compiledRelease *CompiledRelease) StemcellOS() string {

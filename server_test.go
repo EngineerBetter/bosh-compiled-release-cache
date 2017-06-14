@@ -19,7 +19,7 @@ var _ = Describe("Server", func() {
 			}
 
 			Expect(ReleaseFromRequestVars(vars)).To(Equal(bosh.CompiledRelease{
-				ReleaseName:     "github.com/cloudfoundry-community/docker-registry-boshrelease",
+				ReleasePath:     "github.com/cloudfoundry-community/docker-registry-boshrelease",
 				ReleaseVersion:  "11",
 				StemcellName:    "bosh-aws-xen-hvm-ubuntu-trusty-go_agent",
 				StemcellVersion: "3421.6",

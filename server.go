@@ -90,7 +90,7 @@ func releaseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("found release %s in S3\n", release.ReleaseName)
+	log.Printf("found release %s in S3\n", release.ReleasePath)
 
 	bytesCount, err := io.Copy(w, fileReader)
 	if err != nil {
@@ -102,7 +102,7 @@ func releaseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func compile(release bosh.CompiledRelease) {
-	log.Printf("compiling release: %s\n", release.ReleaseName)
+	log.Printf("compiling release: %s\n", release.ReleasePath)
 
 	client := bosh.New(os.Getenv("BOSH_CLIENT"), os.Getenv("BOSH_CLIENT_SECRET"), os.Getenv("BOSH_HOST"), os.Getenv("BOSH_CA_CERT"))
 	output, err := client.Compile(&release)
@@ -119,14 +119,9 @@ func compile(release bosh.CompiledRelease) {
 }
 
 func ReleaseFromRequestVars(requestVars map[string]string) bosh.CompiledRelease {
-	releasePathParts := strings.Split(requestVars["release"], "/")
-	releaseName := releasePathParts[len(releasePathParts)-1]
-	releaseName = strings.TrimSuffix(releaseName, "-release")
-
 	return bosh.CompiledRelease{
 		DeploymentName:  fmt.Sprintf("compilation-%s", uuid.NewV4().String()),
 		ReleasePath:     requestVars["release"],
-		ReleaseName:     releaseName,
 		ReleaseVersion:  requestVars["release_v"],
 		StemcellName:    requestVars["stemcell"],
 		StemcellVersion: requestVars["stemcell_v"],

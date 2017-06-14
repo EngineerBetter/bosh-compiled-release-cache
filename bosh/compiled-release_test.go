@@ -11,7 +11,7 @@ var _ = Describe("CompiledRelease", func() {
 	Describe("ToS3Path", func() {
 		It("Returns the correct path", func() {
 			release := CompiledRelease{
-				ReleaseName:     "github.com/cloudfoundry/garden-runc-release",
+				ReleasePath:     "github.com/cloudfoundry/garden-runc-release",
 				ReleaseVersion:  "1.7.0",
 				StemcellName:    "bosh-aws-xen-hvm-ubuntu-trusty-go_agent",
 				StemcellVersion: "3421.6",
