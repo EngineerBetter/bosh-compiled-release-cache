@@ -1,5 +1,7 @@
 # BOSH Compile Release Cache
 
+A go webserver that caches compiled releases to S3.
+
 ### Requirements:
 
 - [BOSH V2 CLI](http://bosh.io/docs/cli-v2.html#install) in the path as `bosh-cli`
