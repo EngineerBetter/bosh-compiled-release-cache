@@ -15,7 +15,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-const s3Bucket = "summit-hackathon-compiled-releases"
 const s3Region = "eu-west-1"
 const requestTimeoutSeconds = 3600
 const requestTimeout = time.Second * requestTimeoutSeconds
@@ -73,7 +72,7 @@ func releaseHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("timeout=%d, max=%d", requestTimeoutSeconds, 100),
 	)
 
-	fileReader, err := s3.GetFile(s3Bucket, path, s3Region)
+	fileReader, err := s3.GetFile(os.Getenv("S3_BUCKET"), path, s3Region)
 
 	if err != nil && strings.HasPrefix(err.Error(), s3.AWSErrCodeNoSuchKey) {
 		go compile(release)
@@ -112,10 +111,12 @@ func compile(release bosh.CompiledRelease) {
 	}
 
 	log.Printf("uploading release to s3: %s\n", release.ToS3Path())
-	if err := s3.PutFile(s3Bucket, release.ToS3Path(), s3Region, output); err != nil {
+	if err := s3.PutFile(os.Getenv("S3_BUCKET"), release.ToS3Path(), s3Region, output); err != nil {
 		log.Fatal(err)
 		return
 	}
+
+	log.Println("successfully uploaded %s to S3\n", release.ToS3Path())
 }
 
 func ReleaseFromRequestVars(requestVars map[string]string) bosh.CompiledRelease {
