@@ -31,6 +31,12 @@ func New(username, password, ip, caCert string) Client {
 }
 
 func (client *Client) Compile(release *CompiledRelease) (*os.File, error) {
+	log.Printf("uploading stemcell %s\n", release.StemcellURL())
+
+	if err := client.uploadStemcell(release); err != nil {
+		return nil, err
+	}
+
 	manifestBytes, err := GenerateManifest(release)
 	if err != nil {
 		return nil, err
@@ -41,6 +47,8 @@ func (client *Client) Compile(release *CompiledRelease) (*os.File, error) {
 		return nil, err
 	}
 	defer manifestFile.Close()
+
+	log.Printf("deploying manifest:\n%s\n", string(manifestBytes))
 
 	if _, err := manifestFile.Write(manifestBytes); err != nil {
 		return nil, err
@@ -85,6 +93,27 @@ func (client *Client) Compile(release *CompiledRelease) (*os.File, error) {
 	return os.Open(releasePath)
 }
 
+func (client *Client) uploadStemcell(release *CompiledRelease) error {
+	cmd := exec.Command(
+		"bosh-cli",
+		"--non-interactive",
+		"--environment",
+		client.ip,
+		"--ca-cert",
+		client.caCert,
+		"--client",
+		client.username,
+		"--client-secret",
+		client.password,
+		"upload-stemcell",
+		release.StemcellURL(),
+	)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+
+	return cmd.Run()
+}
 func (client *Client) exportRelease(release *CompiledRelease, dir string) error {
 	cmd := exec.Command(
 		"bosh-cli",

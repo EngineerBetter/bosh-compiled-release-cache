@@ -23,8 +23,13 @@ func (compiledRelease *CompiledRelease) ToS3Path() string {
 	)
 }
 
+func (compiledRelease *CompiledRelease) StemcellURL() string {
+	// https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v=3421.6
+	return fmt.Sprintf("https://bosh.io/d/stemcells/%s?v=%s", compiledRelease.StemcellName, compiledRelease.StemcellVersion)
+}
+
 func (compiledRelease *CompiledRelease) BoshURL() string {
-	return "https://bosh.io/d/" + compiledRelease.ReleaseName + "?v=" + compiledRelease.ReleaseVersion
+	return "https://bosh.io/d/" + compiledRelease.ReleasePath + "?v=" + compiledRelease.ReleaseVersion
 }
 
 func sanitizeS3Path(path string) string {
